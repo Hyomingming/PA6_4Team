@@ -48,16 +48,15 @@ GPIO.setup(GREEN, GPIO.OUT)
 GPIO.setup(BLUE, GPIO.OUT)
 GPIO.setup(BUZZER, GPIO.OUT)
 
-GPIO.output(BUZZER, GPIO.LOW)
 GPIO.output(RED, GPIO.LOW)
 GPIO.output(GREEN, GPIO.LOW)
 GPIO.output(BLUE, GPIO.LOW)
+GPIO.output(BUZZER, GPIO.LOW)
 
 def sen_data():
     while True:
         ultradis = serialFromArduino.readline()
         ultradis = float(ultradis)
-        print(ultradis)
 
         if((ultradis < 10)):
             GPIO.output(BUZZER, GPIO.HIGH)
@@ -79,7 +78,6 @@ def sen_data():
             GPIO.output(GREEN, GPIO.LOW)
             GPIO.output(BLUE, GPIO.HIGH)
             yield ultradis
-
         time.sleep(0.1)
 
 class IoTClient:
@@ -120,23 +118,19 @@ class IoTClient:
     def run(self):
         # Report sensors' data forever
         sensor = sen_data()
-        msgid = 0
 
         while True:
             try:
-                events = self.select_periodic(interval=5)
+                events = self.select_periodic(interval=0.1)
                 if not events:      # timeout occurs
                     try:
-                        distance = next(sensor)
+                        data = next(sensor)
                     except StopIteration:
                         logging.info('No more sensor data to send')
                         break
-                    data = dict(distance=distance)
-                    # msgid = str(uuid.uuid1())
-                    msgid += 1
-                    request = dict(deviceid=self.deviceid, msgid=msgid, data=data)
-                    logging.debug(data)
-                    request_bytes = json.dumps(data).encode('utf-8') + b'\n'
+                    request = dict(distance=data)
+                    logging.debug(request)
+                    request_bytes = json.dumps(reques).encode('utf-8') + b'\n'
                     self.sock.sendall(request_bytes)
                     self.requests[msgid] = request_bytes
                 else:               # EVENT_READ
@@ -144,14 +138,9 @@ class IoTClient:
                     if not response_bytes:
                         self.sock.close()
                         raise OSError('Server abnormally terminated')
-                    response = json.loads(response_bytes.decode('ASCII'))
-                    logging.debug(response)
+                    response = json.loads(response_bytes.decode('UTF-8'))
+                    # logging.debug(response)
 
-                    msgid = response.get('msgid')
-                    if msgid and msgid in self.requests:
-                        del self.requests[msgid]
-                    else:
-                        logging.warning('{}: illegal msgid received. Ignored'.format(msgid))
             except Exception as e:
                 logging.error(e)
                 break
@@ -164,16 +153,15 @@ serial_port = "/dev/ttyACM0"
 serialFromArduino = serial.Serial(serial_port,9600)
 serialFromArduino.flushInput()
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
+    if len(sys.argv) == 2:
         host, port = sys.argv[1].split(':')
         port = int(port)
-        deviceid = sys.argv[2]
     else:
-        print('Usage: {} host:port deviceid'.format(sys.argv[0]))
+        print('Usage: {} host:port'.format(sys.argv[0]))
         sys.exit(1)
 
     logging.basicConfig(level=logging.DEBUG,
                         format = '%(asctime)s:%(levelname)s:%(message)s')
-    client = IoTClient((host, port), deviceid)
+    client = IoTClient((host, port))
     client.run()
 GPIO.cleanup()
