@@ -26,48 +26,17 @@ class IoTRequestHandler(socketserver.StreamRequestHandler):
                 status = 'OK'
                 logging.debug("{}:{}".format(client, request)) # 문제없이 실행됐을 경우 client와 request를 info형식으로 출력
 
-            # extract the sensor data from the request
-            # 요청으로부터 센서 데이터를 추출함
-            data = request.get('data') # data의 value값 불러오기
-            if data:        # data exists
-                distance = float(data.get('distance'))
-
             # Insert sensor data into DB tables, 데이터를 DB table에 넣는다
             # and retrieve information to control the actuators, 그리고 actuator를 제어하기 위해 정보를 검색
             pass
 
-            # apply rules to control actuators
-            activate = {}
-            if distance > 0:   # distance reported
-                # activate actuators if necessary to control
-                if distance < 10:
-                    activate['RED'] = 'ON'
-                    activate['GREEN'] = 'OFF'
-                    activate['BLUE'] = 'OFF'
-                    activate['BUZZER'] = 'ON'
-                elif distance < 50:
-                    activate['RED'] = 'OFF'
-                    activate['GREEN'] = 'ON'
-                    activate['BLUE'] = 'OFF'
-                    activate['BUZZER'] = 'OFF'
-                else:
-                    activate['RED'] = 'OFF'
-                    activate['GREEN'] = 'OFF'
-                    activate['BLUE'] = 'ON'
-                    activate['BUZZER'] = 'OFF'
-            ##### 여기까지 반복 #####
-
             # reply response message
             # 응답 메시지 reply
-            # response = dict(status=status, deviceid=request.get('deviceid'),
-            #                 msgid=request.get('msgid'))
-
-            if activate:
-                response['activate'] = activate
+            response = dict(status=status)
+            # logging.debug(response)
             response = json.dumps(response)
             self.wfile.write(response.encode('utf-8') + b'\n') # 응답을 UTF-8로 암호화
             self.wfile.flush()
-            logging.debug("%s" % response)
 
         # end of for loop
         logging.info('Client closing: {}'.format(client))
@@ -76,7 +45,7 @@ class IoTRequestHandler(socketserver.StreamRequestHandler):
 logging.basicConfig(filename='', level=logging.DEBUG,
                     format = '%(asctime)s:%(levelname)s:%(message)s')
 
-serv_addr = ("", 11111)
+serv_addr = ("", 12345)
 with socketserver.ThreadingTCPServer(serv_addr, IoTRequestHandler) as server:
     logging.info('Server starts: {}'.format(serv_addr)) # port 번호가 10007인 서버를 연다고 말해준다
     server.serve_forever()
