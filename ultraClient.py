@@ -11,20 +11,13 @@ to inform the client to activate the actuators if needed.
 
 <request object> ::=
     {   'method': 'POST',
-        'deviceid': <device id>,
-        'msgid': <messge id>,
         'data': {'distance': 28.5 }
     }
 
 <response message> ::= <response object in JSON format with UTF-8 encoding> <LF>
 
 <response object> ::=
-    {   'status': 'OK' | 'ERROR <error msg>',
-        'deviceid': <device id>
-        'msgid': <messge id>
-      [ 'activate': {'red': 'ON', 'green': 'OFF',
-                        'blue': 'OFF', 'buzzer': 'ON' } ]  # optional
-    }
+    {   'status': 'OK' | 'ERROR <error msg>'}
 
 <LF> ::= b'\n'
 """
@@ -97,7 +90,6 @@ class IoTClient:
 
         self.sock = sock
         self.rfile = rfile
-        self.deviceid = deviceid
         self.sel = sel
         self.requests = {}      # messages sent but not yet received their responses
         self.time_to_expire = None
@@ -130,9 +122,8 @@ class IoTClient:
                         break
                     request = dict(distance=data)
                     logging.debug(request)
-                    request_bytes = json.dumps(reques).encode('utf-8') + b'\n'
+                    request_bytes = json.dumps(request).encode('utf-8') + b'\n'
                     self.sock.sendall(request_bytes)
-                    self.requests[msgid] = request_bytes
                 else:               # EVENT_READ
                     response_bytes = self.rfile.readline()
                     if not response_bytes:
