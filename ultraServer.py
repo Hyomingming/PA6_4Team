@@ -16,7 +16,7 @@ class IoTRequestHandler(socketserver.StreamRequestHandler):
                 # 에러 응답 메시지를 응답
                 error_msg = '{}: json decoding error'.format(e)
                 status = 'ERROR {}'.format(error_msg)
-                response = dict(status=status, deviceid=request.get('deviceid'), msgid=request.get('msgid'))
+                response = dict(status=status)
                 response = json.dumps(response)
                 self.wfile.write(response.encode('utf-8') + b'\n') # error를 write file 형식으로 만들어서 기록
                 self.wfile.flush() # file을 만들기 위해 사용한 버퍼를 비워줌
