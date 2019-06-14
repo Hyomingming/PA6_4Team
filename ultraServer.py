@@ -32,9 +32,9 @@ class IoTRequestHandler(socketserver.StreamRequestHandler):
 
             # Insert sensor data into DB tables, 데이터를 DB table에 넣는다
             # and retrieve information to control the actuators, 그리고 actuator를 제어하기 위해 정보를 검색
-            data = request.get('data') # data의 value값 불러오기
+            data = request.get('distnace') # data의 value값 불러오기
             if data:        # data exists
-                Search(name='data', state=data).save()
+                Search(name='distance', state=data).save() # 초음파(data)값
                 
             # reply response message
             # 응답 메시지 reply
