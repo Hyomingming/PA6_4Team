@@ -1,5 +1,9 @@
 import socketserver, json
 import logging
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MOUDLE', 'djsite.settings')
+django.setup()
+from searchs.models import Search
 
 class IoTRequestHandler(socketserver.StreamRequestHandler):
     def handle(self):
@@ -28,8 +32,8 @@ class IoTRequestHandler(socketserver.StreamRequestHandler):
 
             # Insert sensor data into DB tables, 데이터를 DB table에 넣는다
             # and retrieve information to control the actuators, 그리고 actuator를 제어하기 위해 정보를 검색
-            pass
-
+            if data:        # data exists
+                Search(name='data', state=data).save()
             # reply response message
             # 응답 메시지 reply
             response = dict(status=status)
